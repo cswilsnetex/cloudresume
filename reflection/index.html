@@ -55,40 +55,40 @@
 
         <div class="reflection-body">
             <p>
-                The <a href="https://cloudresumechallenge.dev/docs/the-challenge/azure/" target="_blank" rel="noopener noreferrer">Cloud Resume Challenge</a> sounded straightforward when I started: put a resume on Azure, add a visitor counter, wire up CI/CD. In practice, it turned into a crash course in all the things documentation doesn't prepare you for. Here's what actually stood out.
+                The <a href="https://cloudresumechallenge.dev/docs/the-challenge/azure/" target="_blank" rel="noopener noreferrer">Cloud Resume Challenge</a> sounded simple enough. Put a resume on Azure, add a visitor counter, wire up CI/CD. What actually happened was a crash course in all the things documentation doesn't prepare you for.
             </p>
 
-            <h3>ARM templates are verbose but predictable</h3>
+            <h3>One ARM template, one file, no regrets</h3>
             <p>
-                I went with a single ARM template instead of nested or linked ones. The JSON is long, but everything lives in one file, which made it much easier to debug failed deployments. When something breaks, you can trace the entire resource graph without jumping between files. The tradeoff is readability — ARM JSON is not pretty to look at — but for a project this size, the simplicity was worth it.
+                I went with a single ARM template instead of nested or linked ones. The JSON is long, no question, but everything lives in one file and that made debugging failed deployments much easier. When something breaks you can trace the entire resource graph without jumping between files. ARM JSON is not pretty to look at, but for a project this size the simplicity won out.
             </p>
 
-            <h3>Azure Front Door replaced classic CDN (surprise)</h3>
+            <h3>So what happened to Azure CDN?</h3>
             <p>
-                My original plan was Azure CDN with the Standard_Microsoft SKU. Turns out Microsoft deprecated that, along with Standard_Verizon. The replacement is Azure Front Door Standard, which uses a completely different resource model — <code>afdEndpoints</code>, <code>originGroups</code>, and <code>routes</code> instead of the classic CDN endpoint structure. The documentation hadn't fully caught up with the deprecations when I was building this, so there was a stretch where I was piecing things together from API specs and forum posts. It works well now, but it wasn't a smooth migration path.
+                My original plan was Azure CDN with the Standard_Microsoft SKU. Microsoft deprecated that, along with Standard_Verizon. The replacement is Azure Front Door Standard, which uses a completely different resource model. You're working with <code>afdEndpoints</code>, <code>originGroups</code>, and <code>routes</code> instead of the classic CDN endpoint structure. The documentation hadn't caught up with the deprecations when I was building this, so I spent a stretch piecing things together from API specs and forum posts. It works well now, but the migration path was anything but smooth.
             </p>
 
-            <h3>Python v2 functions need a hidden feature flag</h3>
+            <h3>The feature flag nobody tells you about</h3>
             <p>
-                Azure Functions for Python has a newer programming model (v2) that uses decorators instead of <code>function.json</code> files. It's much cleaner to write. But there's a catch: your function app won't discover any of your functions unless you set <code>AzureWebJobsFeatureFlags=EnableWorkerIndexing</code> in the app settings. This wasn't in the quickstart docs I followed. I spent a while staring at an empty functions list before finding the answer in a GitHub issue.
+                Azure Functions for Python has a newer programming model (v2) that uses decorators instead of <code>function.json</code> files. Much cleaner to write. But your function app won't discover any of your functions unless you set <code>AzureWebJobsFeatureFlags=EnableWorkerIndexing</code> in the app settings. This was not in the quickstart docs I followed. I spent a while staring at an empty functions list before finding the answer buried in a GitHub issue.
             </p>
 
-            <h3>OIDC is worth the setup</h3>
+            <h3>OIDC over secrets, every time</h3>
             <p>
-                GitHub Actions can authenticate to Azure using OpenID Connect federated credentials instead of storing client secrets in the repo. No secrets to rotate, no credentials that can leak. The initial setup takes more steps — you need an app registration, a service principal, and federated identity credentials for each repo and branch — but once it's configured, deployments just work. Given how many breaches start with leaked credentials, this felt like the right call.
+                GitHub Actions can authenticate to Azure using OpenID Connect federated credentials instead of storing client secrets in the repo. No secrets to rotate, no credentials that can leak. The initial setup takes more steps because you need an app registration, a service principal, and federated identity credentials for each repo and branch. Once it's configured though, deployments just work. Given how many breaches start with leaked credentials, this felt like the obvious choice.
             </p>
 
-            <h3>DNS delegation keeps things clean</h3>
+            <h3>Delegating DNS without losing control</h3>
             <p>
-                My main domain lives in Cloudflare, but Azure needs DNS control for things like domain validation and alias records. Rather than moving everything, I delegated just the <code>cloudresume</code> subdomain to Azure DNS by adding NS records in Cloudflare. The rest of my DNS stays untouched. It's a simple pattern that I'll probably reuse for future projects.
+                My main domain lives in Cloudflare, but Azure needs DNS control for things like domain validation and alias records. Rather than moving everything, I delegated just the <code>cloudresume</code> subdomain to Azure DNS by adding NS records in Cloudflare. The rest of my DNS stays untouched. Simple pattern, and one I'll probably reuse for future projects.
             </p>
 
-            <h3>The real value</h3>
+            <h3>What I actually learned</h3>
             <p>
-                None of the individual pieces here are groundbreaking. But stringing them all together — static hosting, serverless functions, managed certificates, infrastructure as code, OIDC auth, CI/CD pipelines — forced me to deal with the integration problems that you only hit when you actually build something end to end. Reading docs is one thing. Debugging a CDN cache that won't purge at 11 PM is another.
+                None of the individual pieces here are groundbreaking. But stringing them all together forced me to deal with integration problems that you only hit when you actually build something end to end. Static hosting, serverless functions, managed certificates, infrastructure as code, OIDC auth, CI/CD pipelines. Reading docs is one thing. Debugging a CDN cache that won't purge at 11 PM is another.
             </p>
             <p>
-                If you're considering the Cloud Resume Challenge, I'd recommend it. Not because the resume itself matters, but because the project gives you a reason to touch every layer of the stack.
+                If you're considering the Cloud Resume Challenge, do it. Not because the resume itself matters, but because the project gives you a reason to touch every layer of the stack.
             </p>
         </div>
     </main>
