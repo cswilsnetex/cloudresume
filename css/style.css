@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=GFS+Didot&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -157,6 +159,26 @@ footer {
 .wellfit-logo {
     height: 32px;
     margin-bottom: 4px;
+}
+
+.dedication {
+    margin-top: 24px;
+    font-family: 'GFS Didot', serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #d4d4d4;
+    letter-spacing: 2px;
+    opacity: 0.6;
+}
+
+.dedication a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.dedication a:hover {
+    opacity: 1;
+    color: #bbb;
 }
 
 .note {

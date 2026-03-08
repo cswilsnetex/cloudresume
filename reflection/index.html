@@ -50,45 +50,63 @@
 <body>
     <main>
         <a href="/" class="back-link">&larr; Back to resume</a>
-        <h1 class="reflection-title">What I Learned Building This</h1>
-        <p class="reflection-date">What a year of cloud building taught me</p>
+        <h1 class="reflection-title">How Something Simple Becomes Dangerous</h1>
+        <p class="reflection-date">A week of building, a lifetime of lessons</p>
 
         <div class="reflection-body">
             <p>
-                The <a href="https://cloudresumechallenge.dev/docs/the-challenge/azure/" target="_blank" rel="noopener noreferrer">Cloud Resume Challenge</a> sounded simple enough. Put a resume on Azure, add a visitor counter, wire up CI/CD. What actually happened was a crash course in all the things documentation doesn't prepare you for.
+                The <a href="https://cloudresumechallenge.dev/docs/the-challenge/azure/" target="_blank" rel="noopener noreferrer">Cloud Resume Challenge</a> reads like a weekend project. Put a resume on Azure, add a visitor counter, wire up some CI/CD. That description is dangerously misleading. What looks simple on paper unravels into a tangled web of deprecations, undocumented requirements, and infrastructure decisions that force you to actually understand what you're building. I spent about a week of personal time on this, and roughly three of those days went toward something most people never think about. Directory structure. Just figuring out how the pieces should be organized before writing a single line of real code. The building in Azure went fast once I had that foundation, though I'll admit the challenge framework pushed me toward deployment methods I wouldn't have chosen on my own.
             </p>
 
-            <h3>One ARM template, one file, no regrets</h3>
             <p>
-                I went with a single ARM template instead of nested or linked ones. The JSON is long, no question, but everything lives in one file and that made debugging failed deployments much easier. When something breaks you can trace the entire resource graph without jumping between files. ARM JSON is not pretty to look at, but for a project this size the simplicity won out.
+                That friction was the point. And I want to be clear about something before I go further. Nothing that follows is a complaint. Every frustrating moment taught me something I wouldn't have picked up from a tutorial or a certification exam. The hard parts are where the learning actually lives.
             </p>
 
-            <h3>So what happened to Azure CDN?</h3>
+            <h3>One ARM template and nothing else</h3>
             <p>
-                My original plan was Azure CDN with the Standard_Microsoft SKU. Microsoft deprecated that, along with Standard_Verizon. The replacement is Azure Front Door Standard, which uses a completely different resource model. You're working with <code>afdEndpoints</code>, <code>originGroups</code>, and <code>routes</code> instead of the classic CDN endpoint structure. The documentation hadn't caught up with the deprecations when I was building this, so I spent a stretch piecing things together from API specs and forum posts. It works well now, but the migration path was anything but smooth.
+                Instead of splitting infrastructure across nested or linked ARM templates, I put everything into a single JSON file. It's long. Nobody would call it elegant. What it gave me was the ability to trace every resource and every dependency in one place when a deployment failed at midnight. ARM JSON looks like someone designed a language specifically to test your patience, yet for a project this size, keeping it all in one file meant fewer moving parts and faster debugging. Simplicity won over aesthetics.
             </p>
 
-            <h3>The feature flag nobody tells you about</h3>
+            <h3>The CDN that no longer exists</h3>
             <p>
-                Azure Functions for Python has a newer programming model (v2) that uses decorators instead of <code>function.json</code> files. Much cleaner to write. But your function app won't discover any of your functions unless you set <code>AzureWebJobsFeatureFlags=EnableWorkerIndexing</code> in the app settings. This was not in the quickstart docs I followed. I spent a while staring at an empty functions list before finding the answer buried in a GitHub issue.
+                My original plan called for Azure CDN using the Standard_Microsoft SKU. Microsoft deprecated it, along with Standard_Verizon, and the replacement turned out to be Azure Front Door Standard. This wasn't a simple name change. The entire resource model is different. Instead of the familiar CDN endpoint structure, you're now working with <code>afdEndpoints</code>, <code>originGroups</code>, and <code>routes</code>. When I was building this, the documentation hadn't caught up to reality. I spent a solid stretch reading API specs and digging through forum threads to piece together a working configuration. It runs well now, though getting there felt like assembling furniture from instructions written for a different product.
             </p>
 
-            <h3>OIDC over secrets, every time</h3>
+            <h3>The invisible switch</h3>
             <p>
-                GitHub Actions can authenticate to Azure using OpenID Connect federated credentials instead of storing client secrets in the repo. No secrets to rotate, no credentials that can leak. The initial setup takes more steps because you need an app registration, a service principal, and federated identity credentials for each repo and branch. Once it's configured though, deployments just work. Given how many breaches start with leaked credentials, this felt like the obvious choice.
+                Azure Functions for Python offers a newer programming model (v2) that replaces <code>function.json</code> files with decorators. Much cleaner to write and reason about. There's a catch, though. Your function app will sit there showing zero functions unless you set <code>AzureWebJobsFeatureFlags=EnableWorkerIndexing</code> in the app settings. The quickstart documentation I followed never mentioned this. I stared at an empty functions list for longer than I'd like to admit before finding the answer buried in a GitHub issue from someone who had the same experience. These are the kinds of gotchas that only surface when you actually build something.
             </p>
 
-            <h3>Delegating DNS without losing control</h3>
+            <h3>Federated credentials over stored secrets</h3>
             <p>
-                My main domain lives in Cloudflare, but Azure needs DNS control for things like domain validation and alias records. Rather than moving everything, I delegated just the <code>cloudresume</code> subdomain to Azure DNS by adding NS records in Cloudflare. The rest of my DNS stays untouched. Simple pattern, and one I'll probably reuse for future projects.
+                GitHub Actions can authenticate to Azure through OpenID Connect federated credentials, which eliminates the need to store client secrets in your repository. No secrets to rotate, no credentials sitting around waiting to leak. Setting it up takes more steps because you need an app registration, a service principal, and federated identity credentials configured for each repo and branch. Once that's done, deployments just work. Considering how many breaches trace back to leaked credentials, this was the only approach that made sense to me as a security professional.
             </p>
 
-            <h3>What I actually learned</h3>
+            <h3>Delegating a subdomain without giving up the keys</h3>
             <p>
-                None of the individual pieces here are groundbreaking. But stringing them all together forced me to deal with integration problems that you only hit when you actually build something end to end. Static hosting, serverless functions, managed certificates, infrastructure as code, OIDC auth, CI/CD pipelines. Reading docs is one thing. Debugging a CDN cache that won't purge at 11 PM is another.
+                My primary domain lives in Cloudflare and I wanted to keep it that way. Azure needs DNS control for domain validation and alias records, so rather than migrating everything, I delegated just the <code>cloudresume</code> subdomain to Azure DNS by adding NS records in Cloudflare. Clean separation. The rest of my DNS stays exactly where it is, untouched and under my control. It's a pattern I'll reach for again on future projects.
+            </p>
+
+            <h3>The AI question nobody wants to answer honestly</h3>
+            <p>
+                Here's where it gets interesting. An AI model or a coding assistant could replicate everything on this site. The ARM templates, the Python functions, the CI/CD pipelines, the DNS delegation. All of it. And that fact should make you think carefully about what "building something" actually means.
             </p>
             <p>
-                If you're considering the Cloud Resume Challenge, do it. Not because the resume itself matters, but because the project gives you a reason to touch every layer of the stack.
+                I feel good knowing I don't need a model to get where I am right now. Twenty eight years of solving problems, breaking things, fixing them, and learning from the wreckage gave me something no tool can replicate on its own. Context. Judgment. The instinct that tells you something is wrong before the logs confirm it.
+            </p>
+            <p>
+                AI is a powerful force multiplier, and I use it. Gladly. But it follows the oldest rule in computing. Garbage in, garbage out. The person driving the tool needs to understand what they're asking for and why. Someone who has never built infrastructure by hand can prompt a model to generate a perfect looking ARM template, yet they won't know what to do when the deployment fails for a reason the model never anticipated. The tool amplifies whatever you bring to it.
+            </p>
+            <p>
+                That said, if AI eventually takes CSS off my plate entirely, I will not shed a single tear. Of everything in this project, wrestling with stylesheets was by far the worst part. Give that job to the machines and let humans focus on problems that actually matter.
+            </p>
+
+            <h3>Why the struggle was the whole point</h3>
+            <p>
+                None of the individual pieces in this project are revolutionary. Static hosting, serverless functions, managed certificates, infrastructure as code, OIDC authentication, automated pipelines. You can read about all of them in documentation. What documentation can't give you is the experience of wiring them together end to end and dealing with the problems that only appear at the seams. Reading about CDN caching is easy. Debugging a cache that refuses to purge while you're staring at your screen at 11 PM is where understanding actually takes root.
+            </p>
+            <p>
+                Something simple becomes dangerous when it tricks you into thinking you already know enough. This project reminded me that the gap between understanding a concept and implementing it in production is where real knowledge forms. If you're considering the Cloud Resume Challenge, go build it. Not for the resume. For everything that goes wrong along the way.
             </p>
         </div>
     </main>
