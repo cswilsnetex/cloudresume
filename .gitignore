@@ -1,0 +1,20 @@
+.env
+*.tmp
+
+# Source files
+cloud.txt
+cloud.pdf
+
+# Tests
+tests/
+
+# Screenshots
+*.png
+*.jpg
+*.jpeg
+*.gif
+screenshots/
+
+# Claude / AI
+.claude/
+CLAUDE.md

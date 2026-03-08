@@ -1,0 +1,3 @@
+[submodule "cloudresume-backend"]
+	path = cloudresume-backend
+	url = https://github.com/cswilsnetex/cloudresume-backend.git
